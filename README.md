@@ -3,7 +3,7 @@
 Reusable agent skills. Install globally with:
 
 ```bash
-npx skills add github.com/sethcarlton/skills -g --all --full-depth
+npx skills add github.com/sethcarlton/skills
 ```
 
 ## Skills
