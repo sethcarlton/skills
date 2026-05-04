@@ -1,6 +1,6 @@
 ---
 name: create-spec
-description: create-spec
+description: Create a simple spec file
 ---
 
 Create a simple spec in .specs/.
