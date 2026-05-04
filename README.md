@@ -1,6 +1,6 @@
 # Skills
 
-Reusable agent skills. Install globally with:
+Reusable agent skills.
 
 ```bash
 npx skills add github.com/sethcarlton/skills
