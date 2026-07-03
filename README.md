@@ -13,3 +13,4 @@ npx skills add github.com/sethcarlton/skills
 - `create-spec`
 - `dev-processes`
 - `dotfiles`
+- `react-effects`
