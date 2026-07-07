@@ -11,6 +11,7 @@ npx skills add github.com/sethcarlton/skills
 - `agents-documentation`
 - `committing`
 - `create-spec`
+- `de-slop`
 - `dev-processes`
 - `dotfiles`
 - `react-effects`
