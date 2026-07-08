@@ -1,36 +1,43 @@
 ---
 name: orchestrate-agents
-description: Orchestrate work across agents, models, or harnesses. Use when a task should be delegated, parallelized, routed between Fable, Codex, Claude, opencode, Pi, or subagents, or when the user asks for an agent orchestration instruction, workflow, or routing policy.
+description: Orchestration for delegating or routing work across agents, models, or harnesses. Use when a task needs parallel agents, independent judgment, broad codebase analysis, UI verification, or a routing policy for Fable, Codex, Claude, opencode, Pi, or subagents.
 ---
 
 # Orchestrate Agents
 
-Use orchestration to keep the lead agent's context lean while other agents do bounded work. Do not make a team by reflex. Use one agent when the work is small, sequential, or needs one coherent judgment.
+Orchestration keeps lead context lean while bounded agents do separable work. Do not make a team by reflex. Use one agent when work is small, sequential, or needs one coherent judgment.
+
+## Defaults
+
+- Lead: Fable 5 orchestrator when available.
+- Task workers: `gpt-5.5 high` unless the role clearly needs another model, tool, or harness.
+- Effort: high by default; max only when evidence shows high is insufficient.
+- Mechanical work: use faster or cheaper agents when quality risk is low and verification is cheap.
+- Computer or visual work: route to the harness with the required UI, browser, or screen tools.
 
 ## Process
 
 1. Decide whether orchestration earns its cost.
-   Use orchestration only when the task has separable research, implementation, review, UI verification, codebase analysis, or high-stakes judgment. If the work is tightly coupled or mostly coordination, keep it in one thread. Complete this step when the reason for delegating is explicit.
+   Use orchestration only for separable research, implementation, review, UI verification, codebase analysis, or high-stakes judgment. If work is tightly coupled or mostly coordination, keep it in one thread. Gate: delegation reason named, or single-agent path chosen.
 
 2. Name the lead.
-   The lead plans, decomposes, assigns work, keeps the shared context small, and synthesizes the result. Use the strongest reasoning model as lead only when planning quality matters more than token cost. Complete this step when the lead has a clear job and effort level.
+   Lead plans, decomposes, assigns work, keeps shared context small, and synthesizes. Use the default lead unless planning quality, tool access, or cost says otherwise. Gate: lead, effort, and job are explicit.
 
 3. Assign narrow roles.
-   Route deep reasoning to a reasoning agent, mechanical edits and tests to a fast worker, UI or computer-use verification to Codex when available, and fresh-perspective review to a peer agent. Treat peer agents as independent thinkers, not rubber-stamp reviewers. Complete this step when every delegated role has one output to return.
+   Give each agent one bounded output. Route deep reasoning to a reasoning agent, mechanical edits and tests to a fast worker, UI or computer-use verification to the capable harness, and fresh review to a peer agent. Gate: every role has one returnable artifact or answer.
 
 4. Preserve independence.
-   For high-stakes choices, ask two agents the same question without showing either one the other's answer, then have the lead compare the results. For routine work, delegate sequentially to avoid merge noise. Complete this step when independence is either protected or intentionally unnecessary.
+   For high-stakes choices, ask two agents the same question without showing either the other's answer, then have the lead compare. For routine mutable work, delegate sequentially to avoid merge noise. Gate: independence protected or intentionally unnecessary.
 
 5. Require terse returns.
-   Each agent should report: what it changed or learned, why it matters, files or evidence touched, tests or checks run, and remaining risk. For code changes, prefer a per-file summary with the reason for each file. Complete this step when the lead can synthesize without rereading everything.
+   Require each agent to report: result, why it matters, files or evidence touched, checks run, and remaining risk. For code changes, prefer per-file summary with reason. Gate: lead can synthesize without rereading full transcripts.
 
 6. Synthesize, then verify.
-   The lead chooses the answer, resolves conflicts, runs or requests the relevant checks, and calls out uncertainty. Do not finish with a pile of agent reports. Complete this step when there is one recommendation, patch, or decision with evidence.
+   Lead chooses one answer, resolves conflicts, runs or requests relevant checks, and calls out uncertainty. Do not finish with a pile of agent reports. Gate: one recommendation, patch, or decision has evidence.
 
 ## Routing Rules
 
 - Keep routing policy in repo instructions, skills, or harness config, not in memory.
-- Prefer high effort over max effort unless the task proves it needs more.
 - Offload token-hungry work such as broad codebase analysis, computer use, and visual verification.
 - Use parallel agents for independent judgment, not for work that shares mutable state.
 - Prefer tools and harness primitives over custom agent frameworks until the workflow proves it needs more.
@@ -41,6 +48,7 @@ Use orchestration to keep the lead agent's context lean while other agents do bo
 ```text
 Goal: <outcome>
 Context: <files, constraints, risks>
+Defaults: Lead with Fable 5 orchestrator when available. Use gpt-5.5 high for task workers unless a role needs another model, tool, or harness.
 
-You are the lead. Decide whether this needs delegation. If it does, assign narrow roles, keep agents independent where that matters, and ask each agent for a terse evidence-backed return. Show the plan first, then execute. Synthesize into one result and verify it.
+You are the lead. Decide whether orchestration earns its cost. If yes, assign narrow roles, preserve independence where it matters, and require terse evidence-backed returns. Show the plan first, execute, synthesize one result, and verify it.
 ```
