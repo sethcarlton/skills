@@ -1,6 +1,7 @@
 ---
 name: create-spec
 description: Create a simple spec file
+disable-model-invocation: true
 ---
 
 Create a simple spec in .specs/.

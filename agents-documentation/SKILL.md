@@ -1,6 +1,7 @@
 ---
 name: agents-documentation
 description: Guidance for writing minimal, progressive-disclosure AGENTS.md docs
+disable-model-invocation: true
 ---
 
 # AGENTS.md Guidance
