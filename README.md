@@ -14,5 +14,4 @@ npx skills add github.com/sethcarlton/skills
 - `de-slop`
 - `dev-processes`
 - `dotfiles`
-- `orchestrate-agents`
 - `react-effects`
