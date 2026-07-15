@@ -9,6 +9,7 @@ npx skills add github.com/sethcarlton/skills
 ## Skills
 
 - `agents-documentation`
+- `bro`
 - `committing`
 - `create-spec`
 - `de-slop`
