@@ -1,11 +1,13 @@
 ---
 name: committing
-description: Guidelines for git commit messages
+description: Guidelines for commit messages and PR descriptions
 ---
 
 Commit only when user requests or as part of an explicit defined task.
 
-Before writing the message, inspect recent commits and follow the repository's established convention.
+For commit messages and PR descriptions, explain what changed and, when it is not obvious, why. Use plain words. Avoid achievement language and vague praise such as “comprehensive” or “robust.” A reviewer should understand the change in one read.
+
+Before writing a commit message, inspect recent commits and follow the repository's established convention.
 
 ## Subject
 
