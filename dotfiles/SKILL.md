@@ -1,6 +1,6 @@
 ---
 name: dotfiles
-description: Manage my personal dotfiles
+description: Manage personal dotfiles through the `dot` CLI and bare Git repo. Use when asked to inspect, edit, add, diff, or commit dotfiles; install or configure tools and apps through `dot`; update tracked home config; or work with the `dot` or `dot git` commands.
 ---
 
 ## Overview
