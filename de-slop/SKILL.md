@@ -1,6 +1,6 @@
 ---
 name: de-slop
-description: De-slop code by deleting fake structure with proof. Use when asked to simplify code, collapse wrapper/helper/component/state/effect structure, or inline one-use types/schemas.
+description: De-slop code by deleting fake structure with proof. Use when asked to simplify code, collapse wrapper/helper/component/state/effect structure, remove React effects, or inline one-use types/schemas.
 ---
 
 # De-Slop
@@ -19,7 +19,7 @@ Boundary rule: keep abstractions only when they protect a real boundary.
 
 2. Hunt fake structure.
    Scan touched files for abstractions that fail the Boundary Test, plus stale comments, generic names, and framework machinery leaking into domain code.
-   If nontrivial `useEffect` replacement is needed, invoke `react-effects`; this skill only identifies effect slop.
+   Use the React Effect Test below for `useEffect` and effect-driven state.
    Completion: every touched file has been checked against the Boundary Test and Slop Examples.
 
 3. Pick one cut.
@@ -69,6 +69,25 @@ If yes, keep it and name the boundary.
 - `Pick`, `Omit`, and wrapper aliases used only to avoid writing one local shape.
 - Behavior flags, vague option bags, and generic names.
 - Comments that are leftover plans, obvious narration, or claims the code no longer proves.
+
+## React Effect Test
+
+Default to no raw `useEffect`. It is an escape hatch for synchronizing with a non-React system, not a general data-flow tool.
+
+Try these replacements in order:
+
+1. Compute derived values during render; do not mirror props or state.
+2. Put interaction-specific work in the event handler.
+3. Reset a whole subtree with a `key`; for partial resets, store minimal state and derive the rest.
+4. Lift shared state or notify the parent in the same interaction.
+5. Use framework, router, or server data APIs for fetching.
+6. Use `useSyncExternalStore` for external stores.
+7. Initialize at the entry point or module boundary.
+8. Keep an Effect only to synchronize with an external system.
+
+A kept Effect must name that system and sync direction, explain why the alternatives fail, clean up or be idempotent, handle async races, and pass dependency lint without suppression. Never keep redundant render state, event-specific logic, Effect chains, child-to-parent updates, or an unguarded one-time init.
+
+See React's [You Might Not Need an Effect](https://react.dev/learn/you-might-not-need-an-effect) for examples and edge cases.
 
 ## Biases
 
