@@ -6,7 +6,7 @@ disable-model-invocation: true
 
 # Peer Review V2
 
-First, load the `/herdr` skill and follow it for all Herdr work, including its Herdr environment check.
+Load `/herdr`.
 
 Use the user's guidance to focus the review on the named paths, changes, or risks.
 
@@ -24,20 +24,21 @@ Resolve the target and confirm its diff before you start.
 
 ## Start The Aggregator
 
-Create a new Herdr tab in the current workspace without taking focus from the user. Keep the current working directory. In the tab's first pane, run non-interactive Pi (`--print`) with GPT-5.6 at high reasoning. This agent is the aggregator.
+Create one aggregator tab in the caller's workspace. Start an interactive Pi agent with GPT-5.6 at high reasoning so its progress remains visible.
 
-Tell the aggregator to load the `/herdr` skill, create three more panes in its tab, and run these reviewers at the same time:
+Tell the aggregator to load `/herdr`, coordinate the review itself without invoking another review workflow, create three reviewer panes, and run these reviewers at the same time:
 
 - GPT-5.6 at xhigh reasoning
 - Claude Fable 5 at high reasoning
 - Claude Opus 5 at high reasoning
 
-Run each reviewer with non-interactive Pi through `herdr pane run`. Save all four Pi sessions and record their session IDs.
+Start each reviewer as an interactive Pi agent so its progress remains visible. Save all four Pi sessions and record their session IDs.
 
 Give each reviewer the same diff, target, user guidance, and review brief. Do not share one reviewer's work with another.
 
 Review brief:
 
+- Perform the review yourself. Do not invoke another review workflow or delegate it.
 - Read every changed file in full and follow all repo rules that apply.
 - Look for logic bugs, broken error handling, security flaws, races, and likely edge cases.
 - Check whether the changes fit the nearby design and add work that can grow without a bound.
@@ -50,9 +51,9 @@ Review brief:
 
 Tell the aggregator to wait for all three reviewers and collect their full replies. It must merge findings with the same cause, keep sound findings reported by only one reviewer, and produce one report ordered by severity. The report must name which reviewers found each issue, then list open questions, assumptions, and gaps in test cover. It must also include all four Pi session IDs and a reopen command for each session.
 
-Wait for the aggregator to finish. From the caller's tab, read only the aggregator's final output. Do not read the three reviewer outputs.
+Wait for the aggregator to finish and read only its final output. Do not read the three reviewer outputs.
 
-After you have the aggregator's full output and all session IDs, close all four panes and the review tab. Do not close the caller's pane or tab.
+After you have the full output and all session IDs, close the review tab.
 
 Load the `/bro` skill and use it to restate the aggregator's result to the user in plain, brief language. Include the main findings and their severity, but do not repeat the full review. Keep the full details in the saved Pi sessions.
 
