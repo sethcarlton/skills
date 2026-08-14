@@ -1,83 +1,63 @@
 ---
 name: peer-review
-description: Run three independent bug-focused Pi reviews through Herdr using GPT-5.6 at high and xhigh reasoning plus Claude Fable 5, then correlate their findings.
+description: Review code changes with two parallel reviewers and one aggregator, then report the findings by severity.
 disable-model-invocation: true
 ---
 
 # Peer Review
 
-Use Herdr to run three independent Pi reviewers, then correlate their evidence-backed defects. Invoking this skill requests Herdr orchestration.
+Load `/herdr`.
 
-## 1. Pin The Change
+Use the user's guidance to focus the review on the named paths, changes, or risks.
 
-Use the user's PR, commit, branch, ref, or paths when supplied. Otherwise review uncommitted changes; if none exist, review the last commit.
+## Choose The Changes
 
-Confirm the target resolves and the diff is non-empty before starting reviewers. Capture the exact target, diff command, repository root, and any user guidance for reuse in each prompt.
+Use a PR, commit, branch, ref, or set of paths when the user gives one. Otherwise, use the first target below that exists and has a non-empty diff:
 
-## 2. Verify Herdr
+1. uncommitted changes
+2. an open PR for the current branch, when one exists
+3. the current branch against its direct parent branch, when you can identify it
+4. the current branch against `main`
+5. the last commit
 
-Before any Herdr command, verify this agent runs inside Herdr:
+Resolve the target and confirm its diff before you start.
 
-```bash
-test "${HERDR_ENV:-}" = 1
-```
+## Start The Aggregator
 
-If it fails, say peer review requires a Herdr-managed pane and stop. Use the installed CLI as the authority; inspect `herdr --help`, `herdr pane`, or `herdr agent` when syntax is uncertain.
+Create one aggregator tab in the caller's workspace. Start an interactive Pi agent with GPT-5.6 at high reasoning so its progress remains visible.
 
-## 3. Start Three Pi Reviewers
+Tell the aggregator to load `/herdr`, coordinate the review itself without invoking another review workflow, create two reviewer panes, and run these reviewers at the same time:
 
-Create three sibling panes in the current tab. Preserve the caller's working directory with `--cwd "$PWD"` and the user's focus with `--no-focus`. Inspect the current layout and split panes in directions that keep all four panes usable. Parse pane IDs from Herdr's JSON responses; never infer them.
+- GPT-5.6 at xhigh reasoning
+- Claude Fable 5 at high reasoning
 
-Choose unique agent names for the run, then start these Pi agents:
+Start each reviewer as an interactive Pi agent so its progress remains visible. Save all three Pi sessions and record their session IDs.
 
-```bash
-herdr agent start <gpt-high-name> --kind pi --pane <pane-id> -- \
-  --provider openai-codex --model gpt-5.6-sol --thinking high --ro
-
-herdr agent start <gpt-xhigh-name> --kind pi --pane <pane-id> -- \
-  --provider openai-codex --model gpt-5.6-sol --thinking xhigh --ro
-
-herdr agent start <fable-name> --kind pi --pane <pane-id> -- \
-  --provider anthropic --model claude-fable-5 --ro
-```
-
-Start the three agents concurrently when the available tool surface permits it. If `--ro` is unavailable, use Pi's available read-only controls and explicitly prohibit edits in the prompt.
-
-## 4. Review Independently
-
-Send all three agents the same self-contained prompt concurrently with `herdr agent prompt <name> <prompt> --wait --timeout <ms>`. Include:
-
-- the repository root and exact review target
-- the diff command and user guidance
-- an instruction to read every full changed file and applicable repository guidance
-- an instruction not to edit files
-- the review brief below
+Give each reviewer the same diff, target, user guidance, and review brief. Do not share one reviewer's work with another.
 
 Review brief:
 
-- Focus first on logic errors, broken error handling, security defects, races, and realistic edge cases.
-- Check structural fit and obvious unbounded performance problems.
-- Investigate uncertainty instead of reporting speculation.
-- Ignore unrelated pre-existing code and style-only preferences.
-- Report findings by severity with file and line references, impact, evidence, and a concrete fix when useful.
-- Account for every changed file. If there are no findings, say so and list residual testing gaps.
+- Perform the review yourself. Do not invoke another review workflow or delegate it.
+- Read every changed file in full and follow all repo rules that apply.
+- Look for logic bugs, broken error handling, security flaws, races, and likely edge cases.
+- Check whether the changes fit the nearby design and add work that can grow without a bound.
+- Resolve doubt before reporting a finding. Ignore old code outside the change and matters of style alone.
+- Report findings by severity with file and line references, harm, proof, and a clear fix when useful.
+- Cover every changed file. If there are no findings, say so and list gaps in test cover.
+- Do not edit files.
 
-Do not share one reviewer's analysis with another.
+## Aggregate The Reviews
 
-If an agent blocks or a wait fails, inspect it with `herdr agent get` and `herdr agent read` before acting. Do not treat `unknown` as completion.
+Tell the aggregator to wait for both reviewers and collect their full replies. It must merge findings with the same cause, keep sound findings reported by only one reviewer, and produce one report ordered by severity. The report must name which reviewers found each issue, then list open questions, assumptions, and gaps in test cover. It must also include all three Pi session IDs and a reopen command for each session.
 
-## 5. Collect And Correlate
+Wait for the aggregator to finish and read only its final output. Do not read the two reviewer outputs.
 
-Read each completed response with:
+After you have the full output and all session IDs, close the review tab.
+
+Load the `/bro` skill and use it to restate the aggregator's result to the user in plain, brief language. Include the main findings and their severity, but do not repeat the full review. Keep the full details in the saved Pi sessions.
+
+End with each agent name, its Pi session ID, and its reopen command so the user can inspect the full reviews:
 
 ```bash
-herdr agent read <name> --source recent-unwrapped --lines 200
+pi --session <session-id>
 ```
-
-If terminal scrollback omits part of a response, ask that reviewer to write its complete report as Markdown in a temporary directory and reply only with the path, then read the file directly.
-
-Merge duplicate findings that share one root cause. Preserve a valid finding reported by only one reviewer; agreement raises confidence but is not required.
-
-Report findings first, ordered by severity. For each finding, note which reviewer or reviewers found it. Include open questions or assumptions afterward. If no findings remain, state that explicitly and identify residual testing gaps.
-
-Leave the reviewer panes open so the user can inspect them. Do not close panes or stop agents unless the user asks.
