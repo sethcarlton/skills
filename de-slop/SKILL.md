@@ -5,127 +5,80 @@ description: De-slop code by deleting fake structure with proof. Use when asked 
 
 # De-Slop
 
-Delete fake structure.
+Delete fake structure without changing observable behavior.
 
-Default: smaller, clearer, more boring code with same observable behavior.
-Every deletion is a proof obligation.
-Boundary rule: keep abstractions only when they protect a real boundary.
+Lint owns syntax-level anti-slop policy. This skill handles what lint cannot judge: boundaries, ownership, lifecycle, state, and needless concepts.
 
-## Steps
+## Workflow
 
-1. Pin behavior.
-   Name public entry points, expected outputs, errors, side effects, persistence changes, logs, async ordering, resource lifecycle, serialization, React hook identity where relevant, and the proof check.
-   Completion: the before/after behavior surface is explicit enough to compare.
+1. **Set the scope and pin behavior.** Use the scope the user named. If none was named, use the current worktree changes and their affected callers. List the files in scope, then name the public entry points, outputs, errors, side effects, ordering, persistence, serialization, resource lifecycle, and React identity that must remain stable. Choose the checks that prove them.
 
-2. Hunt fake structure.
-   Scan touched files for abstractions that fail the Boundary Test, plus stale comments, generic names, and framework machinery leaking into domain code.
-   Use the React Effect Test below for `useEffect` and effect-driven state.
-   Completion: every touched file has been checked against the Boundary Test and Slop Examples.
+2. **Check the baseline.** Inspect every file in scope and run the repository's check or lint command, such as `bun check`, `bun run check`, or `bun run lint`. Fix in-scope anti-slop findings at their source. Do not suppress rules, weaken configuration, launder types, or add fake abstractions to pass lint. Record unrelated existing failures.
 
-3. Pick one cut.
-   Choose the candidate with the clearest payoff, highest confidence, and lowest behavior risk.
-   Skip aesthetic-only changes and changes whose behavior cannot be proven.
-   Completion: one simplification target is chosen, with the proof needed to accept it.
+3. **Hunt the whole scope.** Apply the Boundary Test and Hunt list to every file in scope. Keep an inventory of proven candidates and candidates that lack enough evidence.
 
-4. State the proof.
-   Before editing, write the equivalence check: same outputs, errors, ordering, side effects, logs, metrics, persistence, serialization, resource lifecycle, type errors, validation messages, and React hook identity where relevant.
-   Completion: the proof would catch the most likely behavior regression.
+4. **Cut until exhausted.** Work through every proven candidate, one narrow cut at a time. After each cut, inspect affected callers and update the inventory. Do not mix in API changes, broad rewrites, or cosmetic churn. Revert any cut whose behavior cannot be proved and report it instead.
 
-5. Cut narrowly.
-   Make one kind of deletion or collapse at a time.
-   Do not rewrite the module, change public API or behavior, delete suspected dead code without proof, or add an abstraction to reduce lines.
-   Completion: the diff removes structure while preserving the pinned behavior.
-
-6. Verify.
-   Run focused tests, typecheck, lint, or manual checks that prove the change.
-   If proof is missing, leave the change unapplied and report the candidate.
-   Completion: verification passed, or the unproven simplification is not landed.
+5. **Verify completion.** Run focused checks after risky cuts, then the repository's full check or lint command. Re-scan every file in scope. Finish only when no proven fake structure remains in scope; report anything left and why.
 
 ## Boundary Test
 
-Before keeping or adding a helper, component, class, hook, provider, state variable, type alias, interface, schema, constant, option bag, or barrel, ask:
+Keep an abstraction only when it protects a real accessibility, behavior, lifecycle, layout, performance, domain, module, API, validation, ownership, or type-safety boundary.
 
-- Does it protect an accessibility, behavior, lifecycle, layout, performance, domain, module, API, validation, or type-safety boundary?
-- Does it remove a concept from the caller instead of renaming or repackaging it?
-- Does it match existing project components, stores, forms, schemas, and patterns?
-- Is it reused by independent callers or exported across a boundary?
-- Would inlining make code more direct without weakening errors, validation messages, type inference, or ownership?
+Ask:
 
-If mostly no, delete it and inline the idea.
-If yes, keep it and name the boundary.
+- Does it remove a concept from the caller rather than rename or repackage it?
+- Does it have independent callers, external ownership, or a clear project convention?
+- Would inlining make the code more direct without weakening behavior, errors, validation, inference, or ownership?
 
-## Slop Examples
+If no, delete it and inline the idea. If yes, keep it and name the boundary.
+
+## Hunt
+
+Look for:
 
 - Helpers that rename one call, forward arguments, or wrap one operation.
-- `utils`, `helpers`, `services`, or barrel rollups that hide ownership or create import churn.
-- Components with no accessibility boundary, behavior boundary, layout ownership, expensive subtree isolation, domain meaning, or design-system integration.
-- Local classes that only hold static methods or duplicate plain functions and objects.
-- Custom components that conflict with shadcn/ui or the local component system instead of composing it.
-- Mirrored props, stored derived state, parallel booleans, duplicate handlers, and state better owned by a form, URL, router, server, framework data API, existing store, or render derivation.
-- Manual form state rebuilt with scattered `useState` handlers when form state, server action state, or native form behavior would make ownership clearer.
-- Raw `useEffect` or effect-driven state.
-- Hoisted one-use type aliases, interfaces, schemas, constants, or Zod sub-schemas.
-- Types that mirror generated API types, schema input/output, or a local object once.
-- `Pick`, `Omit`, and wrapper aliases used only to avoid writing one local shape.
-- Behavior flags, vague option bags, and generic names.
-- Comments that are leftover plans, obvious narration, or claims the code no longer proves.
+- Generic `utils`, `helpers`, or `services` modules and barrel files that hide ownership.
+- Components, hooks, providers, or classes with no distinct behavior, lifecycle, layout, accessibility, performance, domain, or module boundary.
+- Mirrored props, stored derived state, parallel booleans, duplicate handlers, vague option bags, and state owned by the wrong layer.
+- Manual form state that a form, server action, or native form can own.
+- Raw `useEffect` and effect-driven state.
+- One-use types, interfaces, schemas, constants, and aliases that obscure a local idea or duplicate an existing type source.
+- Leftover plans, obvious narration, generic names, and comments that claim more than the code proves.
 
-## React Effect Test
+## React Effects
 
-Default to no raw `useEffect`. It is an escape hatch for synchronizing with a non-React system, not a general data-flow tool.
+Follow React's [You Might Not Need an Effect](https://react.dev/learn/you-might-not-need-an-effect). An Effect is an escape hatch for synchronizing with a system outside React, not a general data-flow tool.
 
-Try these replacements in order:
+Before keeping an Effect:
 
-1. Compute derived values during render; do not mirror props or state.
-2. Put interaction-specific work in the event handler.
-3. Reset a whole subtree with a `key`; for partial resets, store minimal state and derive the rest.
-4. Lift shared state or notify the parent in the same interaction.
-5. Use framework, router, or server data APIs for fetching.
-6. Use `useSyncExternalStore` for external stores.
-7. Initialize at the entry point or module boundary.
-8. Keep an Effect only to synchronize with an external system.
+- Derive values during render. Use `useMemo` only for an expensive pure calculation.
+- Put work caused by an interaction in its event handler and update related state in that same interaction.
+- Reset a subtree with a `key`. For a partial reset, store the smallest stable fact, such as an ID, and derive the rest. A guarded same-component render adjustment is a last resort; never update another component during render.
+- Lift shared state. Let the parent own shared or fetched data instead of using a child Effect to update it.
+- Prefer framework, router, or server data APIs. If an Effect must fetch, clean up stale requests and prevent races.
+- Use `useSyncExternalStore` for external stores instead of copying them into React state.
+- Run app-wide initialization at the entry point or module boundary.
 
-A kept Effect must name that system and sync direction, explain why the alternatives fail, clean up or be idempotent, handle async races, and pass dependency lint without suppression. Never keep redundant render state, event-specific logic, Effect chains, child-to-parent updates, or an unguarded one-time init.
+Keep an Effect only when rendering must synchronize with a named external system or perform work because the component became visible. State the system and sync direction. Ensure cleanup or idempotence, handle races, and satisfy dependency lint without suppression. Remove Effect chains unless each step independently synchronizes with an external system.
 
-See React's [You Might Not Need an Effect](https://react.dev/learn/you-might-not-need-an-effect) for examples and edge cases.
+Treat configured anti-slop lint findings as evidence that a value lost its owner, contract, or type information. Prefer inference, `satisfies`, an existing owner contract, boundary parsing, direct typed access, and genuine dependency seams. Do not duplicate the lint rules here.
 
-## Biases
+## Guardrails
 
-Prefer:
-
-- Plain functions and objects.
-- Domain names over generic names.
-- Explicit inputs, outputs, failures, and side effects.
-- Straight-line code over clever chains.
-- Fewer concepts, not merely fewer lines.
-- Existing project patterns over local inventions.
-- One type source: API boundary, schema, or local literal.
-
-Avoid:
-
-- Broad rewrites.
-- Cosmetic churn.
-- Nested ternaries.
-- Boolean flags that change semantics.
-- Moving complexity instead of deleting it.
-- Removing abstractions that protect a real boundary.
-
-## Stop
-
-Stop and ask for direction when:
-
-- The simplification changes public API or behavior.
-- The proof surface is missing.
-- The diff grows beyond the original simplification target.
-- Two attempts fail to preserve behavior.
-- The best fix is architectural rather than local.
+- Preserve public API and behavior.
+- Prefer fewer concepts, not merely fewer lines.
+- Prefer plain functions, objects, domain names, and straight-line code.
+- Do not delete suspected dead code without proof.
+- Do not replace one fake abstraction with another.
+- Stop when the proof surface is missing, the work escapes the agreed scope, two attempts at one candidate fail, or the real fix is architectural.
 
 ## Report
 
 End with:
 
-- what structure was deleted or collapsed
+- what was deleted or collapsed
 - what boundary it failed
 - why behavior is preserved
-- what proof ran
-- what slop remains, if any
+- what checks ran and their result
+- what slop remains and why, if any
