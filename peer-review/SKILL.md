@@ -29,7 +29,7 @@ Create one aggregator tab in the caller's workspace. Start an interactive Pi age
 Tell the aggregator to load `/herdr`, coordinate the review itself without invoking another review workflow, create two reviewer panes, and run these reviewers at the same time:
 
 - GPT-5.6 at xhigh reasoning
-- Claude Fable 5 at high reasoning
+- Claude Opus 5.5 at high reasoning
 
 Start each reviewer as an interactive Pi agent so its progress remains visible. Save all three Pi sessions and record their session IDs.
 
