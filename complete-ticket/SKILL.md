@@ -1,6 +1,6 @@
 ---
 name: complete-ticket
-description: Finish a ticket after implementation: commit its changes with a closing issue reference and update follow-up issues only when needed.
+description: Finish a ticket after implementation by committing its changes with a closing issue reference and updating follow-up issues only when needed.
 ---
 
 # Complete Ticket
